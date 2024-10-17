@@ -1,37 +1,66 @@
-let quotes = [
-  {
-    text: "The best way to predict the future is to create it.",
-    category: "Inspiration",
-  },
-  {
-    text: "Life is what happens when you're busy making other plans.",
-    category: "Life",
-  },
-  { text: "Get busy living or get busy dying.", category: "Life" },
-  {
-    text: "Success is not the key to happiness. Happiness is the key to success.",
-    category: "Success",
-  },
-  {
-    text: "If you love what you are doing, you will be successful.",
-    category: "Success",
-  },
-  { text: "You miss 100% of the shots you don’t take.", category: "Sports" },
-  {
-    text: "It is not whether you get knocked down, it’s whether you get up.",
-    category: "Sports",
-  },
-];
+let quotes = [];
+
+const API_URL = "https://jsonplaceholder.typicode.com/posts";
+
+async function fetchQuotesFromServer() {
+  try {
+    const response = await fetch(API_URL);
+    const data = await response.json();
+    const fetchedQuotes = data.map((item) => ({
+      text: item.title,
+      category: "General",
+    }));
+    updateLocalQuotes(fetchedQuotes);
+  } catch (error) {
+    console.error("Error fetching quotes:", error);
+  }
+}
+
+function updateLocalQuotes(fetchedQuotes) {
+  const existingQuotes = JSON.parse(localStorage.getItem("quotes")) || [];
+
+  fetchedQuotes.forEach((fetchedQuote) => {
+    const existingIndex = existingQuotes.findIndex(
+      (q) => q.text === fetchedQuote.text
+    );
+    if (existingIndex === -1) {
+      existingQuotes.push(fetchedQuote);
+      notifyUser("New quote added from server: " + fetchedQuote.text);
+    } else {
+      existingQuotes[existingIndex] = fetchedQuote;
+      notifyUser("Quote updated from server: " + fetchedQuote.text);
+    }
+  });
+
+  localStorage.setItem("quotes", JSON.stringify(existingQuotes));
+  populateCategories();
+}
+
+function notifyUser(message) {
+  const notification = document.getElementById("notification");
+  notification.textContent = message;
+  notification.style.display = "block";
+
+  setTimeout(() => {
+    notification.style.display = "none";
+  }, 5000);
+}
+
+setInterval(fetchQuotesFromServer, 60000);
 
 function showRandomQuote() {
+  if (quotes.length === 0) {
+    return;
+  }
+
   const randomIndex = Math.floor(Math.random() * quotes.length);
   const randomQuote = quotes[randomIndex];
 
   const quoteDisplay = document.getElementById("quoteDisplay");
-
-  quoteText.textContent = `"${randomQuote.text}"`;
-  quoteDisplay.innerHTML = `<strong>Category:</strong> ${randomQuote.category}`;
-  sessionStorage.setItem("lastViewedQuote", JSON.stringify(randomQuote));
+  quoteDisplay.innerHTML = `
+        <p>"${randomQuote.text}"</p>
+        <p><strong>Category:</strong> ${randomQuote.category}</p>
+    `;
 }
 
 function filterQuotes() {
@@ -48,7 +77,7 @@ function filterQuotes() {
   filteredQuotes.forEach((quote) => {
     const quoteText = document.createElement("p");
     const quoteCategory = document.createElement("p");
-    quoteText.textContent = `${quote.text}`;
+    quoteText.textContent = `"\${quote.text}"`;
     quoteCategory.innerHTML = `<strong>Category:</strong> ${quote.category}`;
     quoteDisplay.appendChild(quoteText);
     quoteDisplay.appendChild(quoteCategory);
@@ -59,7 +88,7 @@ function filterQuotes() {
 
 function populateCategories() {
   const categoryFilter = document.getElementById("categoryFilter");
-  const uniqueCategories = [...new Set(quotes.map((quote) => quote.category))]; // Get unique categories
+  const uniqueCategories = [...new Set(quotes.map((quote) => quote.category))];
 
   while (categoryFilter.options.length > 1) {
     categoryFilter.remove(1);
@@ -90,6 +119,7 @@ function addQuote() {
     document.getElementById("newQuoteText").value = "";
     document.getElementById("newQuoteCategory").value = "";
     alert("Quote added successfully!");
+    showRandomQuote();
   } else {
     alert("Please enter both quote text and category.");
   }
@@ -107,3 +137,5 @@ window.onload = function () {
   populateCategories();
   showRandomQuote();
 };
+
+setInterval(fetchQuotesFromServer, 60000);
