@@ -8,51 +8,48 @@ function saveQuotes() {
   localStorage.setItem('quotes', JSON.stringify(quotes));
 }
 
-function showRandomQuote() {
-  const randomIndex = Math.floor(Math.random() * quotes.length);
-  const randomQuote = quotes[randomIndex];
+function populateCategories() {
+  const categoryFilter = document.getElementById('categoryFilter');
+  const uniqueCategories = [...new Set(quotes.map(quote => quote.category))]; // Get unique categories
 
+  while (categoryFilter.options.length > 1) {
+    categoryFilter.remove(1);
+  }
+
+  uniqueCategories.forEach(category => {
+    const option = document.createElement('option');
+    option.value = category;
+    option.textContent = category;
+    categoryFilter.appendChild(option);
+  });
+
+  const savedFilter = localStorage.getItem('selectedCategory');
+  if (savedFilter) {
+    categoryFilter.value = savedFilter;
+    filterQuotes();
+  }
+}
+
+function filterQuotes() {
+  const selectedCategory = document.getElementById('categoryFilter').value;
   const quoteDisplay = document.getElementById('quoteDisplay');
 
   quoteDisplay.innerHTML = '';
 
-  const quoteText = document.createElement('p');
-  const quoteCategory = document.createElement('p');
+  const filteredQuotes = selectedCategory === 'all'
+    ? quotes
+    : quotes.filter(quote => quote.category === selectedCategory);
 
-  // Set text for the elements
-  quoteText.textContent = `"${randomQuote.text}"`;
-  quoteCategory.innerHTML = `<strong>Category:</strong> ${randomQuote.category}`;
+  filteredQuotes.forEach(quote => {
+    const quoteText = document.createElement('p');
+    const quoteCategory = document.createElement('p');
+    quoteText.textContent = `"${quote.text}"`;
+    quoteCategory.innerHTML = `<strong>Category:</strong> ${quote.category}`;
+    quoteDisplay.appendChild(quoteText);
+    quoteDisplay.appendChild(quoteCategory);
+  });
 
-  quoteDisplay.appendChild(quoteText);
-  quoteDisplay.appendChild(quoteCategory);
-
-  sessionStorage.setItem('lastViewedQuote', JSON.stringify(randomQuote));
-}
-
-function createAddQuoteForm() {
-  const formContainer = document.createElement('div');
-
-  const inputText = document.createElement('input');
-  inputText.id = 'newQuoteText';
-  inputText.type = 'text';
-  inputText.placeholder = 'Enter a new quote';
-
-  const inputCategory = document.createElement('input');
-  inputCategory.id = 'newQuoteCategory';
-  inputCategory.type = 'text';
-  inputCategory.placeholder = 'Enter quote category';
-
-  const addButton = document.createElement('button');
-  addButton.id = 'addQuoteButton';
-  addButton.textContent = 'Add Quote';
-
-  addButton.addEventListener('click', addQuote);
-
-  formContainer.appendChild(inputText);
-  formContainer.appendChild(inputCategory);
-  formContainer.appendChild(addButton);
-
-  document.body.appendChild(formContainer);
+  localStorage.setItem('selectedCategory', selectedCategory);
 }
 
 function addQuote() {
@@ -63,6 +60,8 @@ function addQuote() {
     quotes.push({ text: newQuoteText, category: newQuoteCategory });
 
     saveQuotes();
+
+    populateCategories();
 
     document.getElementById('newQuoteText').value = '';
     document.getElementById('newQuoteCategory').value = '';
@@ -91,9 +90,10 @@ function importFromJsonFile(event) {
       const importedQuotes = JSON.parse(event.target.result);
       if (Array.isArray(importedQuotes)) {
         quotes.push(...importedQuotes);
-        saveQuotes();
+        saveQuotes(); 
+        populateCategories(); 
         alert('Quotes imported successfully!');
-        showRandomQuote(); 
+        filterQuotes(); 
       } else {
         alert('Invalid JSON format.');
       }
@@ -104,11 +104,9 @@ function importFromJsonFile(event) {
   fileReader.readAsText(event.target.files[0]);
 }
 
-document.getElementById('newQuote').addEventListener('click', showRandomQuote);
-
 window.onload = function() {
-  showRandomQuote();
-  createAddQuoteForm();  
+  populateCategories();  
+  filterQuotes();        
 
   const lastViewedQuote = sessionStorage.getItem('lastViewedQuote');
   if (lastViewedQuote) {
