@@ -10,7 +10,7 @@ function saveQuotes() {
 
 function populateCategories() {
   const categoryFilter = document.getElementById('categoryFilter');
-  const uniqueCategories = [...new Set(quotes.map(quote => quote.category))]; // Get unique categories
+  const uniqueCategories = [...new Set(quotes.map(quote => quote.category))]; 
 
   while (categoryFilter.options.length > 1) {
     categoryFilter.remove(1);
@@ -26,17 +26,18 @@ function populateCategories() {
   const savedFilter = localStorage.getItem('selectedCategory');
   if (savedFilter) {
     categoryFilter.value = savedFilter;
-    filterQuotes();
+    filterQuotes(); 
   }
 }
 
-function filterQuotes() {
+
+function filterQuote() {
   const selectedCategory = document.getElementById('categoryFilter').value;
   const quoteDisplay = document.getElementById('quoteDisplay');
 
   quoteDisplay.innerHTML = '';
 
-  const filteredQuotes = selectedCategory === 'all'
+  const filteredQuote = selectedCategory === 'all'
     ? quotes
     : quotes.filter(quote => quote.category === selectedCategory);
 
@@ -51,6 +52,7 @@ function filterQuotes() {
 
   localStorage.setItem('selectedCategory', selectedCategory);
 }
+
 
 function addQuote() {
   const newQuoteText = document.getElementById('newQuoteText').value;
