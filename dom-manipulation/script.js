@@ -38,9 +38,11 @@ async function syncQuotes() {
             }
             const result = await response.json();
             console.log('Quote successfully synced with server:', result);
+            notifyUser('Quotes synced with server!'); // Notification for successful sync
         }
     } catch (error) {
         console.error('Error syncing quotes with server:', error);
+        notifyUser('Error syncing quotes with server: ' + error.message); // Notify user of sync error
     }
 }
 
